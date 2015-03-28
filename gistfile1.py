@@ -163,7 +163,7 @@ class Bot:
             user = userbits[0]
             affect = text[0]
             try:
-                if user not in ops:
+                if user in ops:
                     stat = filter(lambda x: x.isalpha(), text[0])
                     x = int(affect[:-1 * len(stat)])
                     for player in players:
