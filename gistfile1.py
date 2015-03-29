@@ -189,7 +189,7 @@ class Player:
         }
         players.append(self)
         print ("created player with name " + self.name)
-        pyBot.send("PRIVMSG #scion :created player with name " + "self.name" + " and stats " + json.dumps(self.stats))
+        pyBot.send("PRIVMSG #scion :created player with name " + self.name + " and stats " + json.dumps(self.stats))
  
 pyBot = Bot()
  
