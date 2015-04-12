@@ -79,7 +79,6 @@ class Bot:
                 elif line[1]=="MODE":
                     self.socket.send("JOIN #scion \r\n")
                     self.socket.send("JOIN #scion-ooc \r\n")
-                    self.socket.send("PRIVMSG nickserv :identify Scionbot numberseverywhere\r\n")
                     if line[2]=="#scion" and line[3].count('+o') > 0:
                         if not (line[4] in ops):
                             ops.append(line[4])
