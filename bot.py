@@ -33,13 +33,13 @@ def parsemsg(s):
  
 class Bot:
     def __init__(self, host='irc.esper.net', port=6667):
-        self.server = 'spoon.netsoc.tcd.ie'
         self.host = host
         self.port = port
  
         self.nickName = 'Scionbot'
         self.ident = 'gaygay2'
         self.realName = 'gaygay2'
+        self.chan =  "#gg2test"
  
         self.receiveBuffer = ""
  
@@ -64,12 +64,12 @@ class Bot:
  
  
     def receive(self):
-        temp = self.socket.recv(1024)
-        if len(temp) > 0: print("Temp: ", temp)
-        self.receiveBuffer += temp
-        temp = string.split(temp, "\n")
+        self.temp = self.socket.recv(1024)
+        # if len(self.temp) > 0: print("Temp: ", self.temp)
+        self.receiveBuffer += self.temp
+        self.temp = string.split(self.temp, "\n")
  
-        for line in temp:
+        for line in self.temp:
             try:
                 line = string.rstrip(line)
                 line = string.split(line)
@@ -77,18 +77,17 @@ class Bot:
                 if(line[0] == "PING"):
                     self.socket.send("PONG %s\r\n" % line[1])
                 elif line[1]=="MODE":
-                    self.socket.send("JOIN #scion \r\n")
-                    self.socket.send("JOIN #scion-ooc \r\n")
-                    if line[2]=="#scion" and line[3].count('+o') > 0:
+                    self.socket.send("JOIN %s \r\n" % self.chan)
+                    if line[2]== self.chan and line[3].count('+o') > 0:
                         if not (line[4] in ops):
                             ops.append(line[4])
-                    elif line[2]=="#scion" and line[3].count('-o') > 0:
+                    elif line[2]== self.chan and line[3].count('-o') > 0:
                         if line[4] in ops:
                             ops.remove(line[4])
-                    elif line[2]=="#scion" and line[3].count('+v') > 0:
+                    elif line[2]== self.chan and line[3].count('+v') > 0:
                         if not (line[4] in ops):
                             voices.append(line[4])
-                    elif line[2]=="#scion" and line[3].count('-v') > 0:
+                    elif line[2]== self.chan and line[3].count('-v') > 0:
                         if line[4] in ops:
                             voices.remove(line[4])
                 if line[1] == "JOIN":
@@ -98,7 +97,7 @@ class Bot:
                     if user != self.nickName:
                         Player(user)
                 elif line[1] == "353":
-                    if line[4] == "#scion" and line[2] == self.nickName:
+                    if line[4] ==  self.chan and line[2] == self.nickName:
                         for i in line[5:]:
                             i = i.lstrip(':')
                             if i[0]=='@':
@@ -116,7 +115,7 @@ class Bot:
                     for player in players:
                         if player.name == user:
                             players.remove(player)
-                            self.send("PRIVMSG #scion :deleted player with name " + user)
+                            self.send("PRIVMSG %s :deleted player with name " + user % self.chan)
                 elif line[1] == "NICK":
                     print ("asdasdasd")
                     userbits = string.split(line[0].lstrip(':'),'!')
@@ -124,13 +123,12 @@ class Bot:
                     for player in players:
                         if player.name == user:
                             player.name = line[2]
-                            self.send("PRIVMSG #scion :player " + user + " renamed to " + line[2].lstrip(':'))
+                            self.send("PRIVMSG %s :player " + user + " renamed to " + line[2].lstrip(':') % self.chan)
                         # update ops list
                         [line[2].lstrip(':') if i == player.name else i for i in ops]
                         [line[2].lstrip(':') if i == player.name else i for i in voices]
             except:
                 pass
-        temp = ""
 
  
  
@@ -138,57 +136,27 @@ class Bot:
         prefix, command, args = parsemsg(self.receiveBuffer)
  
         if command == "PRIVMSG":
- 
             channel = args[0]
- 
+            userbits = prefix.split('!')
+            user = userbits[0]
+            hostmask = userbits[1]
             inputString = args[1]
             inputString = inputString[:-2]
             text = inputString.split(" ")
- 
-            roll = text[0]
-            try:
-                n_dice = min(int(roll[:-1]), 25)
-                if roll[-1] == "d":
-                    output = []
-                    for i in range(n_dice):
-                        output.append(random.randint(1, 10))
-                    output.sort()
-                    output = ", ".join([str(len(list(group)))+"("+str(name)+")" for name, group in itertools.groupby(output)])
-                    self.sendMsg(channel, output)
-            except ValueError:
-                pass
-
-            userbits = prefix.split('!')
-            user = userbits[0]
-            affect = text[0]
-            try:
-                if user in ops:
-                    stat = filter(lambda x: x.isalpha(), text[0])
-                    x = int(affect[:-1 * len(stat)])
-                    for player in players:
-                        if text[1] == player.name:
-                            player.stats[stat] += x
-                            player.stats[stat] = max(player.stats[stat], 0)
-                            self.sendMsg(channel, player.name + "'s " + stat + " stat has been changed to " + str(player.stats[stat]))
-            except ValueError:
-                pass
+            # make messages pretty
+            print ('<' + user + '> ' + str(text[0]))
+        if command != 'PRIVMSG':
+            print(self.temp[0])
+        
+        self.temp = ""
 
 # gg2 strats pro af
 class Player:
     def __init__(self, name):
         self.name = name
-        self.stats = {
-            "Hp":100,
-            "Mag":100,
-            "Str":100,
-            "Def":100,
-            "Res":100,
-            "Spd":100,
-            "Lck":100
-        }
         players.append(self)
         print ("created player with name " + self.name)
-        pyBot.send("PRIVMSG #scion :created player with name " + self.name + " and stats " + json.dumps(self.stats))
+        #pyBot.send("PRIVMSG %s :created player with name " + self.name + " and stats " + json.dumps(self.stats) % self.chan)
  
 pyBot = Bot()
  
