@@ -4,10 +4,17 @@ import sys, os, time, random, math, socket, string, pickle
 import itertools
 import json
 
+#plugins
+import tell
+
 
 players = []
 ops = []
 voices = []
+commands = []
+helps = []
+commandCallbacks = []
+ignore = ['dzjin']
 
 #todo: json based base stat loading maybe?
 
@@ -123,29 +130,58 @@ class Bot:
                     for player in players:
                         if player.name == user:
                             player.name = line[2]
-                            self.send("PRIVMSG %s :player " + user + " renamed to " + line[2].lstrip(':') % self.chan)
+                            #self.send("PRIVMSG %s :player " + user + " renamed to " + line[2].lstrip(':') % self.chan)
                         # update ops list
                         [line[2].lstrip(':') if i == player.name else i for i in ops]
                         [line[2].lstrip(':') if i == player.name else i for i in voices]
             except:
                 pass
-
+    def addCommand(self, command):
+        # takes a class that looks like this
+        # command: "name"
+        # help: "documentation"
+        # callback: 
+        self.command = command()
+        commands.append(self.command.name)
+        helps.append(self.command.help)
+        commandCallbacks.append(self.command.callback)
  
  
     def handleInput(self):
-        prefix, command, args = parsemsg(self.receiveBuffer)
+        self.prefix, self.command, self.args = parsemsg(self.receiveBuffer)
+        if self.command == "PRIVMSG":
+            self.channel = self.args[0]
+            self.userbits = self.prefix.split('!')
+            self.user = self.userbits[0]
+            self.hostmask = self.userbits[1]
+            self.inputString = self.args[1]
+            self.inputString = self.inputString[:-2]
+            self.text = self.inputString.split(" ")
+            self.msgstring = ' '.join(self.text)
  
-        if command == "PRIVMSG":
-            channel = args[0]
-            userbits = prefix.split('!')
-            user = userbits[0]
-            hostmask = userbits[1]
-            inputString = args[1]
-            inputString = inputString[:-2]
-            text = inputString.split(" ")
             # make messages pretty
-            print ('<' + user + '> ' + str(text[0]))
-        if command != 'PRIVMSG':
+            print ('<' + self.user + '> ' + str(self.text[0]))
+            if self.user not in ignore:
+                if self.msgstring[0] == '!':
+                    _cmd = self.text[0][1:]
+                    cmd = _cmd.lower()
+                    print(cmd)
+                    print(commands)
+                    if cmd in commands:
+                        i = commands.index(cmd)
+                        commandCallbacks[i](self.user, self.text)
+                    else:
+                        self.sendMsg(self.chan, "No such command")
+            # hard code for right now but modularize it later
+        if self.command == "PRIVMSG" or self.command == "JOIN":
+            for i in tell.tells:
+                if (i.to == self.user):
+                    self.sendMsg(self.chan, str(i.to) + ", message from <" + str(i.sender) + "> " + str(i.message))
+                    print(str(i.to) + ", message from <" + str(i.sender) + "> " + str(i.message))
+                    tell.tells.pop(tell.tells.index(i))
+                continue
+
+        if self.command != 'PRIVMSG':
             print(self.temp[0])
         
         self.temp = ""
@@ -158,15 +194,19 @@ class Player:
         print ("created player with name " + self.name)
         #pyBot.send("PRIVMSG %s :created player with name " + self.name + " and stats " + json.dumps(self.stats) % self.chan)
  
-pyBot = Bot()
- 
-pyBot.connect()
-pyBot.receive()
- 
-print("Connecting...")
- 
-while True:
+if __name__ == "__main__":
+    pyBot = Bot()
+    
+    pyBot.connect()
     pyBot.receive()
-    pyBot.handleInput()
-    pyBot.receiveBuffer = ""
-    pyBot.timer = time.time()
+    
+    #load plugins
+    pyBot.addCommand(tell.Tell)
+
+    print("Connecting...")
+     
+    while True:
+        pyBot.receive()
+        pyBot.handleInput()
+        pyBot.receiveBuffer = ""
+        pyBot.timer = time.time()
