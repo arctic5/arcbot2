@@ -1,5 +1,4 @@
 import time
-import bot
 tells = []
 class Tell:
     def __init__(self):

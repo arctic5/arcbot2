@@ -6,7 +6,7 @@ import json
 
 #plugins
 import tell
-
+import uptime
 
 players = []
 ops = []
@@ -122,8 +122,7 @@ class Bot:
                     for player in players:
                         if player.name == user:
                             players.remove(player)
-                            self.send("PRIVMSG %s :deleted player with name " + user % self.chan)
-                elif line[1] == "NICK":
+                            #self.send("PRIVMSG %s :deleted player with name " + user % self.chan)
                     print ("asdasdasd")
                     userbits = string.split(line[0].lstrip(':'),'!')
                     user = userbits[0]
@@ -168,7 +167,9 @@ class Bot:
                     # help command
                     if cmd in commands:
                         i = commands.index(cmd)
-                        commandCallbacks[i](self.user, self.text)
+                        c = commandCallbacks[i](self.user, self.text)
+                        if type(c) is str:
+                            self.sendMsg(self.chan, c)
                     elif cmd == "help":
                         self.sendMsg(self.chan, str(commands))
                     else:
@@ -203,6 +204,7 @@ if __name__ == "__main__":
     
     #load plugins
     pyBot.addCommand(tell.Tell)
+    pyBot.addCommand(uptime.Uptime)
 
     print("Connecting...")
      
