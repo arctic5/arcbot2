@@ -165,11 +165,12 @@ class Bot:
                 if self.msgstring[0] == '!':
                     _cmd = self.text[0][1:]
                     cmd = _cmd.lower()
-                    print(cmd)
-                    print(commands)
+                    # help command
                     if cmd in commands:
                         i = commands.index(cmd)
                         commandCallbacks[i](self.user, self.text)
+                    elif cmd == "help":
+                        self.sendMsg(self.chan, str(commands))
                     else:
                         self.sendMsg(self.chan, "No such command")
             # hard code for right now but modularize it later
