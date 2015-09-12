@@ -3,18 +3,24 @@ from __future__ import division, print_function
 import sys, os, time, random, math, socket, string, pickle
 import itertools
 import json
+import sys
+
 
 #plugins
-import tell
 import uptime
+import tell
+import dice
 
 players = []
 ops = []
 voices = []
+bot_admins = []
 commands = []
 helps = []
 commandCallbacks = []
-ignore = ['dzjin']
+ignore = ['dzjin','dzbot']
+
+OWNER = "~icy@96-41-28-228.dhcp.mtpk.ca.charter.com"
 
 #todo: json based base stat loading maybe?
 
@@ -43,10 +49,10 @@ class Bot:
         self.host = host
         self.port = port
  
-        self.nickName = 'Scionbot'
+        self.nickName = 'arcdick'
         self.ident = 'gaygay2'
         self.realName = 'gaygay2'
-        self.chan =  "#gg2test"
+        self.chan =  "#gg2"
  
         self.receiveBuffer = ""
  
@@ -159,19 +165,33 @@ class Bot:
             self.msgstring = ' '.join(self.text)
  
             # make messages pretty
-            print ('<' + self.user + '> ' + str(self.text[0]))
+            print ('<' + self.user + '> ' + str(self.msgstring))
             if self.user not in ignore:
                 if self.msgstring[0] == '!':
                     _cmd = self.text[0][1:]
                     cmd = _cmd.lower()
-                    # help command
                     if cmd in commands:
                         i = commands.index(cmd)
                         c = commandCallbacks[i](self.user, self.text)
                         if type(c) is str:
                             self.sendMsg(self.chan, c)
+                    # built in commands
                     elif cmd == "help":
                         self.sendMsg(self.chan, str(commands))
+                    elif cmd == "ignore":
+                        # weak af check fix this later but i have it on nickserv so it might be fine
+                        if self.user == "arctic":
+                            ignore.append(' '.join(self.text[2:]))
+                    elif cmd == "exec":
+                        # weak af check fix this later but i have it on nickserv so it might be fine
+                        # if self.user == "arctic":
+                        #     try:
+                        #         self.sendMsg(self.chan, eval(' '.join(self.text)))
+                        #         pass
+                        #     except:
+                        #         self.sendMsg(self.chan, 'Error: ' + str(sys.exc_info()[0]))
+                        #         pass
+                        pass
                     else:
                         self.sendMsg(self.chan, "No such command")
             # hard code for right now but modularize it later
@@ -187,6 +207,10 @@ class Bot:
             print(self.temp[0])
         
         self.temp = ""
+
+class Command:
+    def callback(self, user = "", args = ""):
+        pass
 
 # gg2 strats pro af
 class Player:
@@ -205,6 +229,7 @@ if __name__ == "__main__":
     #load plugins
     pyBot.addCommand(tell.Tell)
     pyBot.addCommand(uptime.Uptime)
+    pyBot.addCommand(dice.Roll)
 
     print("Connecting...")
      

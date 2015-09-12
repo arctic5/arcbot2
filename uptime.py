@@ -6,5 +6,6 @@ class Uptime:
     def __init__(self):
         self.name = "uptime"
         self.help = "displays uptime"
-    def callback(self, asdf, asdfg):
+    #todo: fix this
+    def callback(self, user, args):
         return str(datetime.timedelta(seconds= round(time.time()) - starttime))
